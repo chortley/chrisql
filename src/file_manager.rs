@@ -1,6 +1,6 @@
 use std::fs::{create_dir_all, File, OpenOptions};
-use std::io::Result;
 use std::io::Write;
+use std::io::{Read, Result};
 
 pub struct FileManager {
     db_path: String,
@@ -28,6 +28,14 @@ impl FileManager {
         file.write_all(content.as_bytes())?;
         Ok(())
     }
+
+    pub fn read_from_file(&self, file_name: &str) -> Result<String> {
+        let path = format!("{}/{}", self.db_path, file_name);
+        let mut file = File::open(path)?;
+        let mut content = String::new();
+        file.read_to_string(&mut content)?;
+        Ok(content)
+    }
 }
 
 #[cfg(test)]
@@ -44,6 +52,13 @@ mod tests {
 
         create_dir_all(&temp_dir).expect("Failed to create test dir.");
         temp_dir
+    }
+
+    fn setup_test() -> (PathBuf, FileManager) {
+        let temp_dir = setup_temp_dir();
+        let file_manager = FileManager::new(temp_dir.to_str().unwrap());
+
+        return (temp_dir, file_manager);
     }
 
     #[test]
@@ -77,5 +92,24 @@ mod tests {
             file_content, content,
             "File content should match expected content."
         );
+    }
+
+    #[test]
+    fn test_read_from_file() {
+        let (_temp_dir, file_manager) = setup_test();
+        let file_name = "test_read.txt";
+        let expected_content = "This is a test.";
+
+        file_manager
+            .write_to_file(file_name, expected_content)
+            .expect("Failed to write to test file");
+
+        let result = file_manager.read_from_file(file_name);
+        assert!(result.is_ok(), "Reading from file should succeed.");
+        assert_eq!(
+            result.unwrap(),
+            expected_content,
+            "Read content should match expected content"
+        )
     }
 }

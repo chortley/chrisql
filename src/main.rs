@@ -1,5 +1,7 @@
 use std::io::{self, Write};
 
+mod file_manager;
+
 // basic REPL loop to start.
 // just for my future self, REPL stands for Read-Eval-Print-Loop.
 fn main() {
